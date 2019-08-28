@@ -19,10 +19,11 @@ void loop() {
   interruptsetup();
   scroll();
   while (!resetdetect) {}
+  delay(300);
 }
 
 void startup() {
-  resetdetect, alarm1, alarm2, alarm3 = false;
+  resetdetect = alarm1 = alarm2 = alarm3 = false;
   lcd.clear();
   for (int n = 0; n <= 23; n++) {
     pinMode(n + 4, INPUT);
