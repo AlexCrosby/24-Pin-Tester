@@ -21,6 +21,5 @@ Turns out the issue was that a number of the pullup resestors on the board were 
 
 This is still relatively basic code and I'm sure it could easily be improved, I have used what I currently know to get a working, and beyond the first version, this now detects wether the cable has been manually disconnected in order to retest rather than requiring a manual reset each time a new test is needed. 
 
-Code with debugging has been tested and 100% works. The other code should work but is not fully tested, the only difference is the removal of serial functions and some parts were condensed down to fewer lines, but otherwise should work exactly the same.
 
 I welcome any suggestions/pull requests for potential improvements as I'm always looking for ways to improve the code as I learn.
