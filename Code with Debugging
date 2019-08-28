@@ -1,0 +1,191 @@
+#include <LiquidCrystal.h>
+bool result[24][24]; //24*24 array, stores the initial test results before they are parsed.
+int total[24]; //Stores the parsed results for each pin
+String list; //Stores a list of pins that failed testing
+bool alarm1 = false;  //break alarm - set true of break detected
+bool alarm2 = false;  //short alarm - set true of short detected
+bool alarm3 = false;  //combo alarm - set true if a combination of break and short is detected
+volatile bool resetdetect = false; //reset alarm - set true when the cable is manually disconnected
+const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5;   //pins D0-D7 are used for the LCD
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  lcd.begin(16, 2);
+  Serial.begin(9600); //Serial is only used for debugging, it is completely removed in the final build.
+}
+
+void loop() {
+  Serial.println("Start up");
+  startup();
+  Serial.println("Test");
+  test();
+  Serial.println("Continuity");
+  continuity();
+  Serial.println("Sprint");
+  sprint();
+  Serial.println("Rprint");
+  rprint();
+  Serial.println("Buildlist");
+  buildlist();
+  Serial.println("Fault");
+  fault();
+  Serial.println("End of testing");
+  Serial.println("Interrupt setup");
+  interruptsetup();
+  Serial.println("Interrupt Attach complete");
+  Serial.println("Scroll");
+  scroll();
+  Serial.println("End while loop");
+  while (!resetdetect) {}
+  Serial.println("End of program - reset");
+  Serial.println();
+  Serial.println();
+  Serial.println();
+  Serial.println();
+  Serial.println();
+}
+
+void startup() { //Resets all the alarms, clears the LCD screen and resets the pins ready to begin testing.
+  resetdetect = false;
+  alarm1 = false;
+  alarm2 = false;
+  alarm3 = false;
+  lcd.clear();
+  for (int n = 0; n <= 23; n++) {
+    pinMode(n + 4, INPUT);
+    pinMode(n + 28, INPUT_PULLUP);
+  }
+}
+
+void test() {// Initial test - Tests every pin on one end of the cable against every pin on the other end for continuity and stores the result is the result array.
+  for (int x = 0; x <= 23; x++) {
+    pinMode (x + 4, OUTPUT);
+    digitalWrite (x + 4, LOW);
+    for (int y = 0; y <= 23; y++) {
+      result[x][y] = !digitalRead(y + 28);
+    }
+    digitalWrite (x + 4, HIGH);
+    pinMode (x + 4, INPUT);
+  }
+}
+
+void continuity() { // Parses the intital result array and gives a fault/pass code to each pin and stores in a new array and triggers the relevant alarm. 0 = pass 1 = break 2 = short 3 = both/other
+  for (int x = 0; x <= 23; x++) {  //Each pin has it's own fault code, this is not displayed to the user due to LCD screen size limitations but could be utilised if wanted.
+    int counter = 0;
+    for (int y = 0; y <= 23; y++) {
+      counter = counter + result[x][y];
+    }
+    if (    (result[x][x] == 1) &&  (counter == 1)     ) {
+      total[x] = 0;
+    }
+    else if (     (result[x][x] == 0) &&  (counter == 0)     ) {
+      total[x] = 1;
+      alarm1 = true;
+    }
+    else if (     (result[x][x] == 1) &&  (counter >= 2)     ) {
+      total[x] =  2;
+      alarm2 = true;
+    }
+    else if (     (result[x][x] == 0) &&  (counter >= 1)     ) {
+      total[x] =  3;
+      alarm3 = true;
+    }
+  }
+}
+
+void sprint() { //Debug only - prints out the 24*24 results aray, each line is a different pins test results.
+  for (int x = 0; x <= 23; x++) {
+    Serial.println();
+    for (int y = 0; y <= 23; y++) {
+      Serial.print (result[x][y]);
+    }
+  }
+  Serial.println();
+  Serial.println();
+}
+
+void rprint() {// Debug only - prints the total array to view the fault code for each pin.
+  for (int x = 0; x <= 23; x++) {
+    Serial.print(total[x]);
+  }
+  Serial.println();
+  Serial.println();
+}
+
+void buildlist() { //Turns the total array into a string of pin numbers which failed testing, which will be used to display the results on the LCD screen.
+  bool firstchar = true;
+  list = "";
+  for (int n = 0; n <= 23; n++) {
+    if (  (total[n] >= 1)    and (firstchar == true )  ) {
+      list = String(n + 1);
+      firstchar = false;
+    }
+    else if (  (total[n] >= 1)    and (firstchar == false )  ) {
+      list = list + " " + String (n + 1);
+    }
+  }
+  Serial.println(list);
+}
+
+void fault() {// Reads the fault alarms triggered and prints them to the top line of the LCD.
+  lcd.setCursor(0, 0); //This could be merged with continuity
+  if (      (alarm1 == false) &&  (alarm1 == false)   && (alarm1 == false)      ) {
+    lcd.print("No Faults");
+  }
+  else {
+    if (    (alarm1 == true)    ||    (alarm3 == true)    ) {
+      lcd.print("Break ");
+    }
+    if (    (alarm2 == true)    ||    (alarm3 == true)    ) {
+      lcd.print("Short");
+    }
+  }
+}
+
+void interruptsetup() { //After testing, interrupts are set up to monitor for the cable being disconnected.
+  for (int n = 18; n <= 21; n++) { //Only works on pins 18-21 so if those pins are faulty, disconnects wont be detected.
+    pinMode(n + 24, OUTPUT);      //The interrupt flags have to be manually reset via EIFR due to them not clearing automatically when detached as they were retriggering instantly when the interrupt was reattached.
+    digitalWrite(n + 24, LOW);
+    pinMode(n, INPUT_PULLUP);
+  }
+  EIFR |= (1 << INTF3);
+  attachInterrupt(digitalPinToInterrupt(18), reset, CHANGE);
+  EIFR |= (1 << INTF2);
+  attachInterrupt(digitalPinToInterrupt(19), reset, CHANGE);
+  EIFR |= (1 << INTF1);
+  attachInterrupt(digitalPinToInterrupt(20), reset, CHANGE);
+  EIFR |= (1 << INTF0);
+  attachInterrupt(digitalPinToInterrupt(21), reset, CHANGE);
+}
+
+void scroll() {//Displays the failed pins on the bottom line of the LCD.
+  list.trim(); //If the string is longer than 16 characters, the list is repeated so that when scrolling past the last digit, it is cleanly repeated rather than being blank space.
+  int stringlength = list.length(); //It doesn't have to be doubled, just the first 16 characters added to the end to make it appear as if it is infinitely scrolling.
+  lcd.setCursor(0, 1);
+  lcd.print(list.substring(0, 16));
+  if (stringlength > 16) {
+    list = list + " " + list;
+    delay(1000);
+    while (!resetdetect) {
+      for (int n = 0; n <= (stringlength); n++) {
+        lcd.setCursor(0, 1);
+        lcd.print(list.substring(n, n + 16));
+        if (resetdetect) break;
+        delay(400);
+      }
+    }
+  }
+}
+
+void reset() {// Triggered during an interrupt, reset flag used to let the program know the reset has been triggered and disconnects all the interrupts so when don't trigger during next testing phase.
+  resetdetect = true; //Shouldn't use serial in here but was needed during debugging and no issues occured.
+  detachInterrupt(digitalPinToInterrupt(18));
+  detachInterrupt(digitalPinToInterrupt(19));
+  detachInterrupt(digitalPinToInterrupt(20));
+  detachInterrupt(digitalPinToInterrupt(21));
+  Serial.println();
+  Serial.println("TRIGGERED RESET");
+  Serial.println();
+}
+
+//This is not the final version, but it is fully functional. The final version has serial removed and a lot of the lines are compacted down.
