@@ -74,11 +74,10 @@ void buildlist() {
 
 void fault() {
   lcd.setCursor(0, 0);
-  if ((alarm1 == false) && (alarm1 == false) && (alarm1 == false)) lcd.print("No Faults");
-
+  if ((!alarm1) && (!alarm2) && (!alarm3)) lcd.print("No Faults");
   else {
-    if ((alarm1 == true) || (alarm3 == true)) lcd.print("Break ");
-    if ((alarm2 == true) || (alarm3 == true)) lcd.print("Short");
+    if ((alarm1) || (alarm3)) lcd.print("Break ");
+    if ((alarm2) || (alarm3)) lcd.print("Short");
   }
 }
 
