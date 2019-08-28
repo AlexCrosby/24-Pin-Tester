@@ -129,7 +129,7 @@ void buildlist() { //Turns the total array into a string of pin numbers which fa
 
 void fault() {// Reads the fault alarms triggered and prints them to the top line of the LCD.
   lcd.setCursor(0, 0); //This could be merged with continuity
-  if (      (alarm1 == false) &&  (alarm1 == false)   && (alarm1 == false)      ) {
+  if (      (alarm1 == false) &&  (alarm2 == false)   && (alarm3 == false)      ) {
     lcd.print("No Faults");
   }
   else {
