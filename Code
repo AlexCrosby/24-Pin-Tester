@@ -1,0 +1,123 @@
+#include <LiquidCrystal.h>
+bool result[24][24];
+int total[24];
+String list;
+bool alarm1, alarm2, alarm3;
+volatile bool resetdetect;
+LiquidCrystal lcd(A0, A1, A2, A3, A4, A5);
+
+void setup() {
+  lcd.begin(16, 2);
+}
+
+void loop() {
+  startup();
+  test();
+  continuity();
+  buildlist();
+  fault();
+  interruptsetup();
+  scroll();
+  while (!resetdetect) {}
+}
+
+void startup() {
+  resetdetect, alarm1, alarm2, alarm3 = false;
+  lcd.clear();
+  for (int n = 0; n <= 23; n++) {
+    pinMode(n + 4, INPUT);
+    pinMode(n + 28, INPUT_PULLUP);
+  }
+}
+
+void test() {
+  for (int x = 0; x <= 23; x++) {
+    pinMode (x + 4, OUTPUT);
+    digitalWrite (x + 4, LOW);
+    for (int y = 0; y <= 23; y++) result[x][y] = !digitalRead(y + 28);
+    digitalWrite (x + 4, HIGH);
+    pinMode (x + 4, INPUT);
+  }
+}
+
+void continuity() {
+  for (int x = 0; x <= 23; x++) {
+    int counter = 0;
+    for (int y = 0; y <= 23; y++)  counter = counter + result[x][y];
+    if ((result[x][x] == 1) && (counter == 1))  total[x] = 0;
+    else if ((result[x][x] == 0) && (counter == 0)) {
+      total[x] = 1;
+      alarm1 = true;
+    }
+    else if ((result[x][x] == 1) && (counter >= 2)) {
+      total[x] =  2;
+      alarm2 = true;
+    }
+    else if ((result[x][x] == 0) && (counter >= 1)) {
+      total[x] =  3;
+      alarm3 = true;
+    }
+  }
+}
+
+void buildlist() {
+  bool firstchar = true;
+  list = "";
+  for (int n = 0; n <= 23; n++) {
+    if ((total[n] >= 1) and (firstchar == true )) {
+      list = String(n + 1);
+      firstchar = false;
+    }
+    else if ((total[n] >= 1) and (firstchar == false)) list = list + " " + String (n + 1);
+  }
+}
+
+void fault() {
+  lcd.setCursor(0, 0);
+  if ((alarm1 == false) && (alarm1 == false) && (alarm1 == false)) lcd.print("No Faults");
+
+  else {
+    if ((alarm1 == true) || (alarm3 == true)) lcd.print("Break ");
+    if ((alarm2 == true) || (alarm3 == true)) lcd.print("Short");
+  }
+}
+
+void interruptsetup() {
+  for (int n = 18; n <= 21; n++) {
+    pinMode(n + 24, OUTPUT);
+    digitalWrite(n + 24, LOW);
+    pinMode(n, INPUT_PULLUP);
+  }
+  EIFR |= (1 << INTF3);
+  attachInterrupt(digitalPinToInterrupt(18), reset, CHANGE);
+  EIFR |= (1 << INTF2);
+  attachInterrupt(digitalPinToInterrupt(19), reset, CHANGE);
+  EIFR |= (1 << INTF1);
+  attachInterrupt(digitalPinToInterrupt(20), reset, CHANGE);
+  EIFR |= (1 << INTF0);
+  attachInterrupt(digitalPinToInterrupt(21), reset, CHANGE);
+}
+
+void scroll() {
+  list.trim();
+  int stringlength = list.length();
+  lcd.setCursor(0, 1);
+  lcd.print(list.substring(0, 16));
+  if (stringlength > 16) {
+    list = list + " " + list;
+    delay(1000);
+    while (!resetdetect) {
+      for (int n = 0; n <= (stringlength); n++) {
+        lcd.setCursor(0, 1);
+        lcd.print(list.substring(n, n + 16));
+        if (resetdetect) break;
+        delay(400);
+      }
+    }
+  }
+}
+
+void reset() {
+  resetdetect = true;
+   for (int n = 18; n <= 21; n++) detachInterrupt(digitalPinToInterrupt(n));
+}
