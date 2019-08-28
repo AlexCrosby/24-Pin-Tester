@@ -44,16 +44,16 @@ void continuity() {
   for (int x = 0; x <= 23; x++) {
     int counter = 0;
     for (int y = 0; y <= 23; y++)  counter = counter + result[x][y];
-    if ((result[x][x] == 1) && (counter == 1))  total[x] = 0;
-    else if ((result[x][x] == 0) && (counter == 0)) {
+    if ((result[x][x]) && (counter == 1))  total[x] = 0;
+    else if ((!result[x][x]) && (counter == 0)) {
       total[x] = 1;
       alarm1 = true;
     }
-    else if ((result[x][x] == 1) && (counter >= 2)) {
+    else if ((result[x][x]) && (counter >= 2)) {
       total[x] =  2;
       alarm2 = true;
     }
-    else if ((result[x][x] == 0) && (counter >= 1)) {
+    else if ((!result[x][x]) && (counter >= 1)) {
       total[x] =  3;
       alarm3 = true;
     }
@@ -64,11 +64,11 @@ void buildlist() {
   bool firstchar = true;
   list = "";
   for (int n = 0; n <= 23; n++) {
-    if ((total[n] >= 1) and (firstchar == true )) {
+    if ((total[n] >= 1) and (firstchar)) {
       list = String(n + 1);
       firstchar = false;
     }
-    else if ((total[n] >= 1) and (firstchar == false)) list = list + " " + String (n + 1);
+    else if ((total[n] >= 1) and (!firstchar)) list = list + " " + String (n + 1);
   }
 }
 
