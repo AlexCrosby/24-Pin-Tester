@@ -20,3 +20,5 @@ Coincidentally that is why pins start at 4 rather than 0, this code is a remake 
 Turns out the issue was that a number of the pullup resestors on the board were fried, 2 and 3 specifically, and because I wanted consecutive pins, I decided to just start at 4 as there are enough pins on the Arduino MEGA to spare.
 
 This is still relatively basic code and I'm sure it could easily be improved, I have used what I currently know to get a working, and beyond the first version, this now detects wether the cable has been manually disconnected in order to retest rather than requiring a manual reset each time a new test is needed. 
+
+I welcome any suggestions/pull requests for potential improvements as I'm always looking for ways to improve the code as I learn.
