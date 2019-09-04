@@ -1,0 +1,25 @@
+#include <PWM.h>  //PWM library needed to set custom frequency of PWM pins/timers.
+
+int signalPin = 9; //Pin used to output PWM signal/
+int potPin = 0; //Pin that recieves value from the potentiometer.
+int val = 0;  //Value taken from potPin stored here.
+int sval = 0; // Modified val. Mapped from 0-1023 to 0-255.
+
+void setup() {
+  Timer1_Initialize(); //Initiates timers for modification. Timers affect frequency of pins.
+  SetPinFrequency(9, 20); //Sets pin 9 to 20Hz.
+  pinMode(signalPin, OUTPUT); //Sets signalPin as an output.
+  pwmWrite(signalPin, 0); //Same as analogWrite but pwmWrite is required on pins modified by PWM library. Sets signal to 0 to begin.
+  Serial.begin(9600); //Begins serial output for debugging.
+  Serial.print("Begin PWM"); //Serial output to mark start of PWM signal.
+}
+
+void loop() {
+  val = analogRead(potPin); //Reads potPin value 0-1023 and stores to val.
+  sval = map(val, 0, 1023, 0, 255); //Maps val to sval as PWM only scaled from 0-255(0-100%).
+  Serial.println(sval); //Serial prints sval for debugging purposes
+  pwmWrite(signalPin, sval); //Writes sval signalPin setting the dutycycle. 
+  analogWrite(6, sval); //Second PWM same dutycycle but faster frequency. Used to convert to analog. Other PWM too slow.
+  //This then repeats forever so that the dutycycle updates to reflect any changes in val.
+  //End result is that potentiometer adjusts dutycycle.
+}
