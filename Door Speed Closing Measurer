@@ -1,0 +1,42 @@
+#include <LiquidCrystal.h>
+unsigned long startTime;
+unsigned long endTime;
+float duration;
+int mode = 1;
+float spd;
+float distance = 1.00;
+const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  lcd.begin (16, 2);
+  pinMode(2, INPUT_PULLUP);
+  lcd.print("Ready");
+}
+
+void loop() {
+  if ((analogRead(A0) > 300)  && (mode == 1 ) && (analogRead(A1) < 300) ) {
+    startTime = micros();
+    lcd.clear();
+    lcd.print("Running     ");
+    mode = 2;
+  }
+
+  if ((analogRead(A1) > 300) && (mode == 2)   ) {
+    endTime = micros();
+    duration = endTime - startTime;
+    mode = 3;
+    spd = distance / (duration / 1000000.0);
+    lcd.clear();
+    lcd.print("Speed     ");
+    lcd.setCursor(0, 1);
+    lcd.print (spd, 2);
+    lcd.print (" m/s");
+  }
+
+  if ((mode != 1) &&  (digitalRead(2) == LOW)) {
+    mode = 1;
+    lcd.clear();
+    lcd.print("Ready     ");
+  }
+}
