@@ -1,0 +1,85 @@
+#include <LiquidCrystal.h> //Displays the readings of 4 thermocouples using the MAX6675 IC chip.
+#include <max6675.h>  //This library needs to be downlaoded and added to the arduino IDE here: https://github.com/adafruit/MAX6675-library
+const int ktcSO = 0;
+const int ktcSCK = 1;
+const int ktcCS1 = 2;
+const int ktcCS2 = 3;
+const int ktcCS3 = 4;
+const int ktcCS4 = 5;
+MAX6675 ktc1(ktcSCK, ktcCS1, ktcSO);
+MAX6675 ktc2(ktcSCK, ktcCS2, ktcSO);
+MAX6675 ktc3(ktcSCK, ktcCS3, ktcSO);
+MAX6675 ktc4(ktcSCK, ktcCS4, ktcSO);
+const int rs = A0, en = A1, d4 = A2, d5 = A3, d6 = A4, d7 = A5;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int temps[] = {0, 0, 0, 0};
+const int redPin[] = {7, 8, 12, 13};
+const int greenPin[] = {6, 9, 10, 11};
+const int buzzer = SCL;
+
+void setup() {
+  lcd.begin(16, 4);
+  delay(200);
+  setOutput();
+}
+
+void loop() {
+  getTemp();
+  displayTemp();
+  setColour();
+  delay(200);
+}
+
+void getTemp() {
+  temps[0] = int(ktc1.readCelsius());
+  temps[1] = int(ktc2.readCelsius());
+  temps[2] = int(ktc3.readCelsius());
+  temps[3] = int(ktc4.readCelsius());
+}
+
+void displayTemp() {
+  for (int i = 0; i <= 3; i++) {
+    lcd.setCursor(0, i);
+    lcd.print("Temp ");
+    lcd.print(i + 1);
+    lcd.print(": ");
+    lcd.print(temps[i]);
+    lcd.print((char)223);
+    lcd.print("C     ");
+  }
+}
+
+void setOutput() {
+  for (int i = 0; i <= 3; i++) {
+    pinMode(redPin[i], OUTPUT);
+  }
+}
+
+void setColour() {
+  for (int i = 0; i <= 3; i++) {
+    if (temps[i] <= 80) {
+      digitalWrite(redPin[i], LOW);
+      analogWrite (greenPin[i], 255);
+    }
+    else if (temps[i] > 80 &&  temps[i] <= 120) {
+      digitalWrite(redPin[i], HIGH);
+      analogWrite (greenPin[i], 100);
+    }
+    else {
+      digitalWrite(redPin[i], HIGH);
+      analogWrite (greenPin[i], 0);
+    }
+  }
+}
+
+//setColor(255, 0, 0); red
+
+//setColor(255, 50, 0); yellow
+
+//setColor(0, 255, 0); green
+//100ohm red 56ohm green
+
+
+//or
+
+//100ohm red and 330ohm green
