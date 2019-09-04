@@ -11,15 +11,9 @@ After testing interrupts are setup to detect the cable being disconnected and re
 
 While this code is written for 24 core cable, this could easily be modified to work with any number of cores, providing the arduino you use has enough digital pins or you use a shift register.
 
-While this code is very niche, it is a fantastic time saving tool for testing large numbers of cables quickly, or cables with a lot of pins that all need testing for shorts.
-
 
 Code with debugging uses serial to output various results as they are generated. This is particularly useful if the results are unexpected as you can see exactly what the arduino is detecting as it runs. It also helps identify problems due to faulty digital pins on the arduino.
 
-Coincidentally that is why pins start at 4 rather than 0, this code is a remake of my very first program which was made before I could write code. I used arduBlock which works a bit like scratch with drag and drop functions. The code was since lost and after a battery being connected backwards caused issues with the only arduino running it, I had to rewrite it.
-Turns out the issue was that a number of the pullup resestors on the board were fried, 2 and 3 specifically, and because I wanted consecutive pins, I decided to just start at 4 as there are enough pins on the Arduino MEGA to spare.
-
-This is still relatively basic code and I'm sure it could easily be improved, I have used what I currently know to get it working, and beyond the first version, this now detects whether the cable has been manually disconnected in order to retest rather than requiring a manual reset each time a new test is needed. 
 
 
-I welcome any suggestions/pull requests for potential improvements as I'm always looking for ways to improve the code as I learn.
+Other programs on here can be documented on request, please email me if you require it.
