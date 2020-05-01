@@ -1,4 +1,8 @@
 # 24-Pin-Tester
+
+NOTE: These small programs were created prior to receiving any formal computer science education for personal use, so the code quality is not reflective of my current ability.
+
+
 Tests the continuity of a 24 pin cable using an arduino.
 
 How it works:
